@@ -46,43 +46,43 @@ for row in board:
 
 
 def merge(row):
+    gained_score = 0
+
     for i in range(SIZE - 1):
         if row[i] == row[i + 1] and row[i] != 0:
             row[i] *= 2
+            gained_score += row[i]
             row[i + 1] = 0
 
-    return row
+    return row, gained_score
 
 
 
 def move_left(board):
     new_board = []
+    move_score = 0
 
     for row in board:
         row = compress(row)
-        row = merge(row)
+
+        row, row_score = merge(row)
+        move_score += row_score
+
         row = compress(row)
 
         new_board.append(row)
 
-    return new_board
-
+    return new_board, move_score
 
 
 def move_right(board):
-    new_board = []
+    reversed_board = [row[::-1] for row in board]
 
-    for row in board:
-        row.reverse()          # Reverse row
-        row = compress(row)
-        row = merge(row)
-        row = compress(row)
-        row.reverse()          # Reverse back
+    reversed_board, move_score = move_left(reversed_board)
 
-        new_board.append(row)
+    new_board = [row[::-1] for row in reversed_board]
 
-    return new_board
-
+    return new_board, move_score
 
 
 def transpose(board):
@@ -90,18 +90,22 @@ def transpose(board):
 
 def move_up(board):
     board = transpose(board)
-    board = move_left(board)
+
+    board, move_score = move_left(board)
+
     board = transpose(board)
 
-    return board
+    return board, move_score
 
 
 def move_down(board):
     board = transpose(board)
-    board = move_right(board)
+
+    board, move_score = move_right(board)
+
     board = transpose(board)
 
-    return board
+    return board, move_score
 
 def check_win(board):
     for row in board:
@@ -133,6 +137,7 @@ def game_over(board):
 if __name__ == "__main__":
 
     board = create_board()
+    score = 0
 
     add_new_tile(board)
     add_new_tile(board)
@@ -140,6 +145,7 @@ if __name__ == "__main__":
     while True:
 
         print_board(board)
+        print("Score:", score)
 
         move = input("Enter move (W/A/S/D) or Q to quit: ").lower()
 
@@ -149,21 +155,26 @@ if __name__ == "__main__":
 
         old_board = [row[:] for row in board]
 
+        gained = 0
+
         if move == "a":
-            board = move_left(board)
+            board, gained = move_left(board)
 
         elif move == "d":
-            board = move_right(board)
+            board, gained = move_right(board)
 
         elif move == "w":
-            board = move_up(board)
+            board, gained = move_up(board)
 
         elif move == "s":
-            board = move_down(board)
+            board, gained = move_down(board)
 
         else:
             print("Invalid move!")
             continue
+        
+        
+        score += gained
 
         if board != old_board:
             add_new_tile(board)
